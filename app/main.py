@@ -5,6 +5,8 @@ from fastapi import FastAPI
 
 from app.core.config import settings
 from app.core.database import close_db, init_db
+from app.modules.autores.router import router as autores_router
+from app.modules.clientes.router import router as clientes_router
 from app.modules.editoriales.router import router as editoriales_router
 from app.modules.generos.router import router as generos_router
 from app.modules.health.router import router as health_router
@@ -33,7 +35,7 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(editoriales_router)
 app.include_router(generos_router)
+app.include_router(autores_router)
+app.include_router(clientes_router)
 
-# Los turnos siguientes registran acá sus routers, por ejemplo:
-# from app.modules.autores.router import router as autores_router
-# app.include_router(autores_router)
+# Los turnos siguientes registran acá sus routers.

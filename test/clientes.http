@@ -1,0 +1,95 @@
+### Casos de prueba del módulo clientes y perfiles (Turno 3)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### 1. Crear cliente sin perfil (201, perfil = null)
+POST {{base_url}}/clientes/
+Content-Type: application/json
+
+{
+  "nombre": "Ana Pérez",
+  "email": "ana@example.com"
+}
+
+### 2. Crear cliente con perfil (201)
+POST {{base_url}}/clientes/
+Content-Type: application/json
+
+{
+  "nombre": "Luis Gómez",
+  "email": "luis@example.com",
+  "perfil": {
+    "telefono": "2615551234",
+    "direccion": "San Martín 123"
+  }
+}
+
+### 3. Email repetido (409, RN-02)
+POST {{base_url}}/clientes/
+Content-Type: application/json
+
+{
+  "nombre": "Otra Ana",
+  "email": "ana@example.com"
+}
+
+### 4. Email con formato inválido (422)
+POST {{base_url}}/clientes/
+Content-Type: application/json
+
+{
+  "nombre": "Mal Email",
+  "email": "no-es-un-email"
+}
+
+### 5. Listar clientes con perfil (200)
+GET {{base_url}}/clientes/?limit=10&offset=0
+
+### 6. Detalle con perfil (200)
+GET {{base_url}}/clientes/2
+
+### 7. Cliente inexistente (404)
+GET {{base_url}}/clientes/9999
+
+### 8. Crear perfil al cliente 1 (201)
+POST {{base_url}}/clientes/1/perfil
+Content-Type: application/json
+
+{
+  "telefono": "2614440000",
+  "direccion": "Belgrano 456"
+}
+
+### 9. Segundo perfil para el mismo cliente (409, RN-09)
+POST {{base_url}}/clientes/1/perfil
+Content-Type: application/json
+
+{
+  "telefono": "2610000000"
+}
+
+### 10. Perfil para cliente inexistente (404)
+POST {{base_url}}/clientes/9999/perfil
+Content-Type: application/json
+
+{
+  "telefono": "2610000000"
+}
+
+### 11. Editar nombre (200)
+PATCH {{base_url}}/clientes/1
+Content-Type: application/json
+
+{
+  "nombre": "Ana María Pérez"
+}
+
+### 12. Editar con email de otro cliente (409)
+PATCH {{base_url}}/clientes/1
+Content-Type: application/json
+
+{
+  "email": "luis@example.com"
+}

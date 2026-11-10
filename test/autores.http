@@ -1,0 +1,63 @@
+### Casos de prueba del módulo autores (Turno 3)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### 1. Crear autor (201)
+POST {{base_url}}/autores/
+Content-Type: application/json
+
+{
+  "nombre": "Julio",
+  "apellido": "Cortázar",
+  "nacionalidad": "Argentina"
+}
+
+### 2. Crear autor sin nacionalidad (201)
+POST {{base_url}}/autores/
+Content-Type: application/json
+
+{
+  "nombre": "Jorge Luis",
+  "apellido": "Borges"
+}
+
+### 3. Body inválido: falta el apellido (422)
+POST {{base_url}}/autores/
+Content-Type: application/json
+
+{
+  "nombre": "Sin apellido"
+}
+
+### 4. Listar con paginación (200)
+GET {{base_url}}/autores/?limit=10&offset=0
+
+### 5. Paginación inválida (422)
+GET {{base_url}}/autores/?limit=0
+
+### 6. Detalle del autor 1 (200)
+GET {{base_url}}/autores/1
+
+### 7. Autor inexistente (404)
+GET {{base_url}}/autores/9999
+
+### 8. Id no numérico (422)
+GET {{base_url}}/autores/abc
+
+### 9. Editar parcialmente (200)
+PATCH {{base_url}}/autores/1
+Content-Type: application/json
+
+{
+  "nacionalidad": "Belga-Argentina"
+}
+
+### 10. Editar autor inexistente (404)
+PATCH {{base_url}}/autores/9999
+Content-Type: application/json
+
+{
+  "nombre": "Nadie"
+}
