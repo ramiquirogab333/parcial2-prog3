@@ -8,3 +8,6 @@ Cada turno agrega acá el import del `models.py` de su módulo, por ejemplo:
 
 Turno 1 (Core) no define tablas: el módulo health no persiste nada.
 """
+
+from app.modules.editoriales import models as editoriales_models  # noqa: F401
+from app.modules.generos import models as generos_models  # noqa: F401

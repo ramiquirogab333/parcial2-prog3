@@ -1,0 +1,93 @@
+### Casos de prueba del módulo editoriales (Turno 2)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### 1. Crear editorial (201)
+POST {{base_url}}/editoriales/
+Content-Type: application/json
+
+{
+  "nombre": "Editorial Planeta",
+  "pais": "Argentina"
+}
+
+### 2. Crear otra editorial (201)
+POST {{base_url}}/editoriales/
+Content-Type: application/json
+
+{
+  "nombre": "Sudamericana",
+  "pais": "Argentina"
+}
+
+### 3. Nombre repetido (409)
+POST {{base_url}}/editoriales/
+Content-Type: application/json
+
+{
+  "nombre": "Editorial Planeta",
+  "pais": "Chile"
+}
+
+### 4. Body inválido: falta el país (422)
+POST {{base_url}}/editoriales/
+Content-Type: application/json
+
+{
+  "nombre": "Falta país"
+}
+
+### 5. Listar editoriales con paginación por defecto (200)
+GET {{base_url}}/editoriales/
+
+### 6. Listar con limit y offset (200)
+GET {{base_url}}/editoriales/?limit=2&offset=1
+
+### 7. limit fuera de rango: 101 (422)
+GET {{base_url}}/editoriales/?limit=101
+
+### 8. offset negativo (422)
+GET {{base_url}}/editoriales/?offset=-1
+
+### 9. Obtener por id existente (200)
+GET {{base_url}}/editoriales/1
+
+### 10. Id no entero (422)
+GET {{base_url}}/editoriales/abc
+
+### 11. Id inexistente (404)
+GET {{base_url}}/editoriales/9999
+
+### 12. PATCH: actualizar solo el país (200)
+PATCH {{base_url}}/editoriales/1
+Content-Type: application/json
+
+{
+  "pais": "Uruguay"
+}
+
+### 13. PATCH con nombre ya existente (409)
+PATCH {{base_url}}/editoriales/2
+Content-Type: application/json
+
+{
+  "nombre": "Editorial Planeta"
+}
+
+### 14. PATCH id no entero (422)
+PATCH {{base_url}}/editoriales/abc
+Content-Type: application/json
+
+{
+  "pais": "Chile"
+}
+
+### 15. PATCH id inexistente (404)
+PATCH {{base_url}}/editoriales/9999
+Content-Type: application/json
+
+{
+  "pais": "Chile"
+}

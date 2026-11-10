@@ -1,0 +1,40 @@
+### Casos de prueba del módulo generos (Turno 2)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### 1. Crear género (201)
+POST {{base_url}}/generos/
+Content-Type: application/json
+
+{
+  "nombre": "Novela"
+}
+
+### 2. Crear otro género (201)
+POST {{base_url}}/generos/
+Content-Type: application/json
+
+{
+  "nombre": "Ciencia Ficción"
+}
+
+### 3. Nombre repetido (409)
+POST {{base_url}}/generos/
+Content-Type: application/json
+
+{
+  "nombre": "Novela"
+}
+
+### 4. Body inválido: nombre vacío (422)
+POST {{base_url}}/generos/
+Content-Type: application/json
+
+{
+  "nombre": ""
+}
+
+### 5. Listar géneros (200)
+GET {{base_url}}/generos/
