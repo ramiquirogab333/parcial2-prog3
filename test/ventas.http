@@ -1,0 +1,179 @@
+### Casos de prueba del módulo ventas (Turno 5)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### y los pre-requisitos de libros.http ya ejecutados (editorial, género, autores).
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### --------------------------------------------------------------------------
+### Pre-requisitos: un cliente y dos libros
+### --------------------------------------------------------------------------
+
+### Pre-1. Crear cliente (201)
+POST {{base_url}}/clientes/
+Content-Type: application/json
+
+{
+  "nombre": "Tomás Ríos",
+  "email": "tomas@example.com"
+}
+
+### Pre-2. Crear libro "Rayuela" a 25000.00 (201)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-07-0001-1",
+  "titulo": "Rayuela",
+  "precio": "25000.00",
+  "stock": 10,
+  "editorial_id": 1,
+  "autores": []
+}
+
+### Pre-3. Crear libro "Respiración artificial" a 27000.00 (201)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-07-0002-8",
+  "titulo": "Respiración artificial",
+  "precio": "27000.00",
+  "stock": 5,
+  "editorial_id": 1,
+  "autores": []
+}
+
+### --------------------------------------------------------------------------
+### Altas de ventas (POST /ventas/)
+### Ajustar cliente_id y libro_id a los ids devueltos por los pre-requisitos.
+### --------------------------------------------------------------------------
+
+### C-06. Venta válida con dos renglones
+### Esperado: 201, con los renglones creados, los precios copiados de cada libro
+### y el total calculado por el servidor (2 * 25000 + 1 * 27000 = 77000.00).
+### En la consola aparece, después de la respuesta, el aviso del comprobante (D-07).
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": [
+    { "libro_id": 1, "cantidad": 2 },
+    { "libro_id": 2, "cantidad": 1 }
+  ]
+}
+
+### C-05a. Venta con un libro inexistente
+### Esperado: 409 {"detail": "Uno o más libros especificados no existen"}
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": [
+    { "libro_id": 99999, "cantidad": 1 }
+  ]
+}
+
+### C-05b. Venta con un cliente inexistente
+### Esperado: 409 {"detail": "El cliente especificado no existe"}
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 99999,
+  "renglones": [
+    { "libro_id": 1, "cantidad": 1 }
+  ]
+}
+
+### RN-05a. Venta sin renglones
+### Esperado: 422 (validación del DTO, no se ejecuta el handler)
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": []
+}
+
+### RN-05b. Mismo libro en dos renglones
+### Esperado: 422 "Un mismo libro no puede aparecer en dos renglones"
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": [
+    { "libro_id": 1, "cantidad": 1 },
+    { "libro_id": 1, "cantidad": 2 }
+  ]
+}
+
+### Cantidad no positiva
+### Esperado: 422
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": [
+    { "libro_id": 1, "cantidad": 0 }
+  ]
+}
+
+### RN-06/RN-07. Precio y total enviados por el cliente se ignoran
+### Esperado: 201; precio_unitario y total salen de la base, no del cuerpo.
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "total": "1.00",
+  "renglones": [
+    { "libro_id": 2, "cantidad": 1, "precio_unitario": "1.00" }
+  ]
+}
+
+### --------------------------------------------------------------------------
+### Lecturas
+### --------------------------------------------------------------------------
+
+### C-07. Detalle de una venta
+### Esperado: 200, con cliente y renglones. Con DB_ECHO=true se ve en consola una
+### cantidad fija de consultas, la misma con uno o con varios renglones.
+GET {{base_url}}/ventas/1
+
+### Detalle de una venta inexistente
+### Esperado: 404 {"detail": "No existe una venta con ese id"}
+GET {{base_url}}/ventas/99999
+
+### C-01. Parámetro de ruta que no es entero
+### Esperado: 422, sin ejecutar el handler
+GET {{base_url}}/ventas/abc
+
+### Listado de ventas paginado (RN-10)
+### Esperado: 200
+GET {{base_url}}/ventas/?limit=20&offset=0
+
+### Listado con limit fuera de rango
+### Esperado: 422
+GET {{base_url}}/ventas/?limit=500
+
+### Ventas de un cliente
+### Esperado: 200 con las ventas del cliente 1
+GET {{base_url}}/clientes/1/ventas
+
+### Ventas de un cliente inexistente
+### Esperado: 404 {"detail": "No existe un cliente con ese id"}
+GET {{base_url}}/clientes/99999/ventas
+
+### RN-08. Las ventas no se modifican
+### Esperado: 405 Method Not Allowed
+PATCH {{base_url}}/ventas/1
+Content-Type: application/json
+
+{
+  "cliente_id": 2
+}

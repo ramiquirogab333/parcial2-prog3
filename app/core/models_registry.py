@@ -9,3 +9,4 @@ from app.modules.clientes import models as clientes_models  # noqa: F401
 from app.modules.editoriales import models as editoriales_models  # noqa: F401
 from app.modules.generos import models as generos_models  # noqa: F401
 from app.modules.libros import models as libros_models  # noqa: F401
+from app.modules.ventas import models as ventas_models  # noqa: F401

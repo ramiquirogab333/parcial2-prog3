@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.modules.autores.models import Autor
     from app.modules.editoriales.models import Editorial
     from app.modules.generos.models import Genero
+    from app.modules.ventas.models import RenglonVenta
 
 
 class LibroAutor(SQLModel, table=True):
@@ -70,3 +71,5 @@ class Libro(SQLModel, table=True):
         back_populates="libro",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
+    # Asociación con RenglonVenta (Turno 5): navegación en los dos extremos.
+    renglones: list["RenglonVenta"] = Relationship(back_populates="libro")

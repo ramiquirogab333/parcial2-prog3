@@ -1,8 +1,11 @@
 """Modelos de tabla del módulo clientes: Cliente y PerfilCliente (relación 1 a 1)."""
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.modules.ventas.models import Venta
 
 
 class Cliente(SQLModel, table=True):
@@ -17,6 +20,8 @@ class Cliente(SQLModel, table=True):
         back_populates="cliente",
         sa_relationship_kwargs={"uselist": False},
     )
+    # Asociación con Venta (Turno 5): navegación en los dos extremos.
+    ventas: list["Venta"] = Relationship(back_populates="cliente")
 
 
 class PerfilCliente(SQLModel, table=True):

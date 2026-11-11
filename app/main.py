@@ -11,6 +11,7 @@ from app.modules.editoriales.router import router as editoriales_router
 from app.modules.generos.router import router as generos_router
 from app.modules.health.router import router as health_router
 from app.modules.libros.router import router as libros_router
+from app.modules.ventas.router import router as ventas_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,5 +40,4 @@ app.include_router(generos_router)
 app.include_router(autores_router)
 app.include_router(clientes_router)
 app.include_router(libros_router)
-
-# Los turnos siguientes registran acá sus routers (Turno 5: Ventas).
+app.include_router(ventas_router)
