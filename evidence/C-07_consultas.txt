@@ -1,0 +1,22 @@
+﻿Caso C-07 - Detalle de un libro y de una venta
+Evidencia tomada sobre la misma imagen que se despliega, con SQL_ECHO=true.
+Se cuentan las sentencias SELECT que emite SQLAlchemy para cada request.
+
+libro 1 (1 autor) -> 2 SELECT
+Respuesta: {"id":1,"isbn":"978-950-07-0001-1","titulo":"Rayuela","precio":"25000.00","stock":8,"editorial_id":1,"genero_id":1,"editorial":{"id":1,"nombre":"Sudamericana","pais":"Argentina"},"genero":{"id":1,"nombre":"Ficci├│n"},"autores":[{"id":1,"autor_id":1,"nombre":"Julio","apellido":"Cort├ízar","nacionalidad":"Argentina","rol":"autor","orden":1}]}
+
+  2026-11-11 22:14:14,558 INFO sqlalchemy.engine.Engine SELECT libro.id, libro.isbn, libro.titulo, libro.precio, libro.stock, libro.editorial_id, libro.genero_id, editorial_1.id AS id_1, editorial_1.nombre, editorial_1.pais, genero_1.id AS id_2, genero_1.nombre AS nombre_1 
+  2026-11-11 22:14:14,561 INFO sqlalchemy.engine.Engine SELECT libro_autor.libro_id AS libro_autor_libro_id, libro_autor.autor_id AS libro_autor_autor_id, libro_autor.rol AS libro_autor_rol, libro_autor.orden AS libro_autor_orden, autor_1.id AS autor_1_id, autor_1.nombre AS autor_1_nombre, autor_1.apellido AS autor_1_apellido, autor_1.nacionalidad AS autor_1_nacionalidad 
+
+libro 3 (2 autores) -> 2 SELECT
+Respuesta: {"id":3,"isbn":"978-950-00-0006-6","titulo":"Los que aman, odian","precio":"21000.00","stock":4,"editorial_id":1,"genero_id":1,"editorial":{"id":1,"nombre":"Sudamericana","pais":"Argentina"},"genero":{"id":1,"nombre":"Ficci├│n"},"autores":[{"id":3,"autor_id":3,"nombre":"Adolfo","apellido":"Bioy Casares","nacionalidad":"Argentina","rol":"coautor","orden":1},{"id":4,"autor_id":4,"nombre":"Silvina","apellido":"Ocampo","nacionalidad":"Argentina","rol":"coautor","orden":2}]}
+
+  2026-11-11 22:14:15,613 INFO sqlalchemy.engine.Engine SELECT libro.id, libro.isbn, libro.titulo, libro.precio, libro.stock, libro.editorial_id, libro.genero_id, editorial_1.id AS id_1, editorial_1.nombre, editorial_1.pais, genero_1.id AS id_2, genero_1.nombre AS nombre_1 
+  2026-11-11 22:14:15,615 INFO sqlalchemy.engine.Engine SELECT libro_autor.libro_id AS libro_autor_libro_id, libro_autor.autor_id AS libro_autor_autor_id, libro_autor.rol AS libro_autor_rol, libro_autor.orden AS libro_autor_orden, autor_1.id AS autor_1_id, autor_1.nombre AS autor_1_nombre, autor_1.apellido AS autor_1_apellido, autor_1.nacionalidad AS autor_1_nacionalidad 
+
+venta 1 (2 renglones) -> 2 SELECT
+Respuesta: {"id":1,"fecha":"2026-11-11T22:10:15.029351Z","total":"77000.00","cliente":{"id":2,"nombre":"Tom├ís R├¡os","email":"tomas@example.com"},"renglones":[{"libro_id":1,"titulo":"Rayuela","cantidad":2,"precio_unitario":"25000.00","subtotal":"50000.00"},{"libro_id":4,"titulo":"Respiraci├│n artificial","cantidad":1,"precio_unitario":"27000.00","subtotal":"27000.00"}]}
+
+  2026-11-11 22:14:16,641 INFO sqlalchemy.engine.Engine SELECT venta.id, venta.cliente_id, venta.fecha, venta.total, cliente_1.id AS id_1, cliente_1.nombre, cliente_1.email 
+  2026-11-11 22:14:16,643 INFO sqlalchemy.engine.Engine SELECT renglon_venta.venta_id AS renglon_venta_venta_id, renglon_venta.id AS renglon_venta_id, renglon_venta.libro_id AS renglon_venta_libro_id, renglon_venta.cantidad AS renglon_venta_cantidad, renglon_venta.precio_unitario AS renglon_venta_precio_unitario, libro_1.id AS libro_1_id, libro_1.isbn AS libro_1_isbn, libro_1.titulo AS libro_1_titulo, libro_1.precio AS libro_1_precio, libro_1.stock AS libro_1_stock, libro_1.editorial_id AS libro_1_editorial_id, libro_1.genero_id AS libro_1_genero_id 
+
