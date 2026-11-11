@@ -14,6 +14,7 @@ set -u
 APP="${APP:-grupo11-libreria-api}"
 NETWORK="${NETWORK:-grupo11-libreria-net}"
 ENV_FILE="${ENV_FILE:-/root/grupo11-libreria.env}"
+ECHO_ENV_FILE="${ECHO_ENV_FILE:-/root/grupo11-libreria-echo.env}"
 PORT="${PORT:-8011}"
 BASE="http://127.0.0.1:${PORT}"
 OUT="evidence"
@@ -60,6 +61,11 @@ fi
   docker logs -t "$APP" 2>&1 | grep -E 'POST /ventas|Comprobante' | sort
 } > "$OUT/D-07_comprobante.txt" 2>&1
 
+if ! grep -q 'Comprobante' "$OUT/D-07_comprobante.txt"; then
+  echo "ADVERTENCIA: D-07 no encontró el aviso del comprobante."
+  echo "Ejecutá primero el caso D-03 desde tu PC (POST /ventas/) y volvé a correr el script."
+fi
+
 # D-04: eliminar el contenedor, correrlo de nuevo y verificar que los datos siguen.
 {
   echo '$ docker rm -f '"$APP"
@@ -101,13 +107,13 @@ fi
 } > "$OUT/D-06_usuario.txt" 2>&1
 
 # C-07: contenedor temporal con SQL_ECHO=true, sin healthcheck.
-grep -v '^SQL_ECHO=' "$ENV_FILE" > /root/grupo11-libreria-echo.env
-echo 'SQL_ECHO=true' >> /root/grupo11-libreria-echo.env
-chmod 600 /root/grupo11-libreria-echo.env
+grep -v '^SQL_ECHO=' "$ENV_FILE" > "$ECHO_ENV_FILE"
+echo 'SQL_ECHO=true' >> "$ECHO_ENV_FILE"
+chmod 600 "$ECHO_ENV_FILE"
 docker rm -f "${APP}-echo" >/dev/null 2>&1 || true
 docker run -d --name "${APP}-echo" \
   --network "$NETWORK" \
-  --env-file /root/grupo11-libreria-echo.env \
+  --env-file "$ECHO_ENV_FILE" \
   --no-healthcheck \
   -p "127.0.0.1:8012:8000" \
   grupo11-libreria-api:latest >/dev/null
@@ -139,7 +145,7 @@ done
 } > "$OUT/C-07_consultas_vps.txt" 2>&1
 
 docker rm -f "${APP}-echo" >/dev/null 2>&1 || true
-rm -f /root/grupo11-libreria-echo.env
+rm -f "$ECHO_ENV_FILE"
 
 echo "Evidencia generada en $OUT/:"
 ls -1 "$OUT"
