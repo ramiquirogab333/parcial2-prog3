@@ -35,7 +35,7 @@ async def cargar_datos_iniciales() -> None:
 
         async with async_session_factory() as session:
             resultado = await session.exec(select(func.count()).select_from(Libro))
-            if resultado.one():
+            if resultado.scalar_one():
                 print("La base ya tiene libros cargados. No se inserta nada.")
                 return
 
