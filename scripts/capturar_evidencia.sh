@@ -50,7 +50,7 @@ fi
   echo '$ docker ps'
   docker ps
   echo
-  echo '$ docker logs '"$APP"'
+  echo '$ docker logs '"$APP"
   docker logs "$APP" 2>&1 | head -40
 } > "$OUT/D-02_contenedor_healthy.txt" 2>&1
 
