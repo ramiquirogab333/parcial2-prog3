@@ -18,17 +18,27 @@ OUT="evidence"
 mkdir -p "$OUT"
 
 find_container() {
-  docker ps --filter name=libreria-api --format '{{.Names}}' | head -1
+  docker ps --filter name=grupo_11_libreria-api --filter status=running --format '{{.Names}}' | head -1
 }
 
 APP="$(find_container)"
 if [ -z "$APP" ]; then
-  echo "No encontré el contenedor de libreria-api. Abortando."
+  echo "No encontré el contenedor de grupo_11_libreria-api. Abortando."
   exit 1
 fi
 IMAGE="$(docker inspect "$APP" --format '{{.Config.Image}}')"
 echo "Contenedor: $APP"
 echo "Imagen: $IMAGE"
+
+# Seguridad: no tocar contenedores de otros grupos que también se llamen
+# "libreria-api" (en este VPS compartido hay uno de el_piso_es_laburo-3).
+case "$IMAGE" in
+  *grupo_11/libreria-api*) ;;
+  *)
+    echo "La imagen no es la del grupo 11: $IMAGE"
+    exit 1
+    ;;
+esac
 
 # D-01 necesita la imagen base visible en docker images. BuildKit puede no
 # dejarla taggeada, así que se descarga si falta.
@@ -77,7 +87,7 @@ fi
   done
   if [ -z "$NEW" ] || [ "$NEW" = "$OLD" ]; then
     echo "Swarm no recreó la tarea; forzando con docker service update --force..."
-    SVC="$(docker service ls --filter name=libreria-api --format '{{.Name}}' | head -1)"
+    SVC="$(docker service ls --filter name=grupo_11_libreria-api --format '{{.Name}}' | head -1)"
     docker service update --force "$SVC"
     for _ in $(seq 1 30); do
       NEW="$(find_container)"
@@ -98,8 +108,8 @@ fi
     echo
   fi
   echo
-  echo '$ docker ps --filter name=libreria-api'
-  docker ps --filter name=libreria-api
+  echo '$ docker ps --filter name=grupo_11_libreria-api'
+  docker ps --filter name=grupo_11_libreria-api
   echo
   echo "\$ docker exec $NEW wget -qO- http://127.0.0.1:8000/libros/"
   docker exec "$NEW" wget -qO- http://127.0.0.1:8000/libros/
