@@ -176,5 +176,46 @@ de la red de Easypanel y es la que se usa para la entrega.
 
 ## Evidencia
 
-Las salidas de los casos D-01 a D-07 y C-07 se guardan en `evidence/`.
-Ver la tabla de evidencia al final del archivo una vez desplegado.
+### Paso 1: caso D-03 desde afuera (PC)
+
+Con la API ya arriba, desde tu PC:
+
+```powershell
+'{"cliente_id":2,"renglones":[{"libro_id":1,"cantidad":2},{"libro_id":4,"cantidad":1}]}' | Set-Content -Encoding ascii venta.json
+curl.exe -i http://libros.francogagliardi.me:8011/health/ready
+curl.exe -s http://libros.francogagliardi.me:8011/libros/
+curl.exe -i -X POST http://libros.francogagliardi.me:8011/ventas/ -H "Content-Type: application/json" --data-binary "@venta.json"
+```
+
+Guardar la salida en `evidence/D-03_url_publica.txt`.
+
+### Paso 2: D-01, D-02, D-04, D-05, D-06, D-07 y C-07 en el VPS
+
+```bash
+cd /root/grupo11-libreria-src
+git pull
+bash scripts/capturar_evidencia.sh
+```
+
+El script genera:
+
+- `evidence/D-01_docker_images.txt`
+- `evidence/D-02_contenedor_healthy.txt`
+- `evidence/D-04_recreacion.txt`
+- `evidence/D-05_sin_database_url.txt`
+- `evidence/D-06_usuario.txt`
+- `evidence/D-07_comprobante.txt`
+- `evidence/C-07_consultas_vps.txt`
+
+### Tabla de evidencia
+
+| Caso | Archivo |
+| --- | --- |
+| C-07 | `evidence/C-07_consultas_vps.txt` |
+| D-01 | `evidence/D-01_docker_images.txt` |
+| D-02 | `evidence/D-02_contenedor_healthy.txt` |
+| D-03 | `evidence/D-03_url_publica.txt` |
+| D-04 | `evidence/D-04_recreacion.txt` |
+| D-05 | `evidence/D-05_sin_database_url.txt` |
+| D-06 | `evidence/D-06_usuario.txt` |
+| D-07 | `evidence/D-07_comprobante.txt` |
