@@ -22,13 +22,13 @@ despliegue en un VPS.
 - Python 3.12
 - FastAPI 0.111 (todos los handlers con `async def`)
 - SQLModel 0.0.24 y SQLAlchemy 2.0 asincrónico
-- PostgreSQL 16 con el controlador `asyncpg` 0.30
+- PostgreSQL 16 o superior con el controlador `asyncpg` 0.30
 - uvicorn
 
 ## Requisitos previos
 
 - Python 3.12
-- PostgreSQL 16 (local o en el servidor)
+- PostgreSQL 16 o superior (local o en el servidor)
 - Docker 20.10 o superior (solo para construir la imagen)
 
 ## Puesta en marcha desde cero (máquina local)
@@ -124,28 +124,32 @@ Los archivos asumen una base limpia: algunos crean sus propios prerrequisitos
 Construir la imagen (desde la raíz del proyecto):
 
 ```bash
-docker build -t libreria:latest .
+docker build -t grupo11-libreria-api:latest .
 ```
 
 Correr el contenedor con las variables desde un archivo externo (nunca dentro
 de la imagen):
 
 ```bash
-docker run -d --name libreria -p 127.0.0.1:8000:8000 \
-  --env-file libreria.env libreria:latest
+docker run -d --name grupo11-libreria-api -p 127.0.0.1:8000:8000 \
+  --env-file grupo11-libreria.env grupo11-libreria-api:latest
 ```
 
 Cargar los datos iniciales dentro del contenedor:
 
 ```bash
-docker exec libreria python -m app.seed
+docker exec grupo11-libreria-api python -m app.seed
 ```
 
 ## Despliegue
 
-El despliegue real en el VPS, la URL pública y los comandos completos están
-documentados en [`DEPLOY.md`](DEPLOY.md). Las salidas de diagnóstico pedidas
-por la consigna están en la carpeta [`evidence/`](evidence/).
+- **URL pública:** <https://libros.francogagliardi.me>
+- **Documentación interactiva:** <https://libros.francogagliardi.me/docs>
+- **Repositorio:** <https://github.com/ramiquirogab333/parcial2-prog3>
+
+El despliegue real en el VPS, los comandos y la arquitectura están documentados
+en [`DEPLOY.md`](DEPLOY.md). Las salidas de diagnóstico pedidas por la consigna
+están en la carpeta [`evidence/`](evidence/).
 
 ## Estructura del proyecto
 
@@ -165,6 +169,7 @@ app/
     libros/               libros y libro_autor
     ventas/               ventas y renglones
 test/                     casos .http
+scripts/                  captura de evidencia
 Dockerfile                imagen de la aplicación
 .dockerignore             archivos que no entran a la imagen
 env.example               forma de las variables de entorno
