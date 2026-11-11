@@ -1,0 +1,10 @@
+$ docker images python:3.12-alpine
+IMAGE                ID             DISK USAGE   CONTENT SIZE   EXTRA
+python:3.12-alpine   e064671ca452       74.8MB         18.7MB
+
+$ docker images easypanel/grupo_11/libreria-api:latest
+IMAGE                                    ID             DISK USAGE   CONTENT SIZE   EXTRA
+easypanel/grupo_11/libreria-api:latest   a6729f64e081        209MB         49.3MB   U
+
+# La imagen base python:3.12-alpine pesa 74.8 MB (por debajo del límite de 100 MB)
+# y el Dockerfile parte de ella. La imagen del proyecto incluye las dependencias.

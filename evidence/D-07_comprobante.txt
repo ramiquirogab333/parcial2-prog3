@@ -1,0 +1,8 @@
+$ docker logs -t grupo_11_libreria-api.1.g6o8ejtlvj55a4rhwce0whwss | grep -E 'POST /ventas|Comprobante' | sort
+2026-11-11T22:46:27.704353808Z INFO:     10.11.0.16:42074 - "POST /ventas/ HTTP/1.1" 422 Unprocessable Entity
+2026-11-11T22:48:02.768020000Z INFO:     10.11.0.16:56962 - "POST /ventas/ HTTP/1.1" 201 Created
+2026-11-11T22:48:03.270149004Z INFO:app.modules.ventas.service:Comprobante de la venta 1 enviado a tomas@example.com (total 77000.00)
+
+# El 422 corresponde al primer intento con JSON inválido; el 201 es la venta
+# válida. El comprobante aparece 0.5 s después de la respuesta 201, en segundo
+# plano (BackgroundTasks + asyncio.sleep).

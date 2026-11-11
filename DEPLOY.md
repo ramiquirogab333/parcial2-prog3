@@ -2,220 +2,159 @@
 
 ## Datos del despliegue
 
-- **URL pública:** `http://libros.francogagliardi.me:8011`
-- **Fecha y hora del despliegue:** PENDIENTE (se completa al desplegar)
+- **URL pública:** <https://libros.francogagliardi.me>
+- **Fecha y hora:** 2026-11-11, 19:30 hs (UTC-3, aproximado)
 - **Servidor:** `srv1920450` (Ubuntu 24.04, Docker 29.7.1), VPS compartido entre grupos
 - **Grupo:** 11
-- **Contenedor de la API:** `grupo11-libreria-api`
-- **Contenedor de PostgreSQL:** `grupo11-libreria-db` (`postgres:16-alpine`)
-- **Red interna:** `grupo11-libreria-net`
-- **Volumen de datos:** `grupo11-libreria-pgdata`
-- **Archivo de variables:** `/root/grupo11-libreria.env` (fuera del repositorio y
-  de la imagen; permisos `600`)
+- **Proyecto Easypanel:** `grupo_11`
+- **Servicio de la API:** `libreria-api` (App service de Easypanel; contenedor Swarm
+  `grupo_11_libreria-api.1.<id>`)
+- **Servicio de PostgreSQL:** `libreria-bd` (contenedor Swarm
+  `grupo_11_libreria-bd.1.<id>`), imagen `postgres:18`
+- **Dominio:** `libros.francogagliardi.me`, puerto del contenedor **8000**, HTTPS
+  con Let's Encrypt (Traefik de Easypanel)
+- **Variables:** `DATABASE_URL` y `SQL_ECHO=false`, cargadas en Easypanel. No hay
+  archivo `.env` en el repositorio ni dentro de la imagen.
 
-> Los recursos son propios del grupo 11. No se reutilizan ni se modifican
-> `libreria`, `libreria-db` ni `libreria-net`, que pertenecen a otro grupo del
-> mismo servidor.
+> La consigna pide PostgreSQL 16 como versión mínima. Se usó `postgres:18`, que
+> la supera y es compatible con el proyecto.
 
 ## Arquitectura
 
-La imagen de la aplicación se construye en el servidor a partir del `Dockerfile`.
-PostgreSQL **no forma parte de la imagen ni del contenedor de la API**: corre en
-su propio contenedor `postgres:16-alpine`, con un volumen para que los datos
-sobrevivan a la recreación de la API. Solo se publica el puerto de la API; el
-puerto 5432 de PostgreSQL queda en la red interna y no se publica.
+La imagen de la API se construye con el `Dockerfile` del repositorio
+(`python:3.12-alpine`) y se ejecuta como **App service de Easypanel**, que corre
+sobre Docker Swarm. PostgreSQL es un **servicio de Easypanel** del mismo
+proyecto, en la red interna; su puerto 5432 **no se publica**.
 
-La API se conecta por el nombre del contenedor de la base
-(`grupo11-libreria-db`) dentro de la red `grupo11-libreria-net`. No se usa
-`localhost`: dentro de un contenedor, `localhost` es el propio contenedor.
+El tráfico público entra por el proxy de Easypanel (Traefik) en 80/443, con
+certificado de Let's Encrypt, y se enruta a la API en el puerto **8000**.
+
+La API se conecta a la base por el host interno que muestra Easypanel, nunca por
+`localhost`: dentro del contenedor, `localhost` es el propio contenedor.
+
+## Cómo se desplegó
+
+1. **PostgreSQL** en Easypanel: servicio `libreria-bd`, base `libreria`, imagen
+   `postgres:18`, con un usuario y una contraseña definidos en el panel.
+2. **App service** `libreria-api` en el proyecto `grupo_11`:
+   - Fuente: GitHub `ramiquirogab333/parcial2-prog3`, rama `main`, build path `/`.
+   - Build: **Dockerfile** (path `Dockerfile`).
+   - Variables de entorno:
+     - `DATABASE_URL` con el driver `postgresql+asyncpg`, el usuario, la
+       contraseña, el host interno y la base que muestra el servicio PostgreSQL.
+     - `SQL_ECHO=false`.
+   - Dominio: `libros.francogagliardi.me`, puerto del contenedor **8000**, HTTPS.
+3. **Deploy** desde Easypanel (build + creación del servicio).
+4. **Datos iniciales** dentro del contenedor:
+
+   ```bash
+   docker exec <contenedor> python -m app.seed
+   ```
 
 ## Comandos
 
-### 1. Código en el servidor
+### Build de la imagen
 
-```bash
-cd /root
-git clone https://github.com/ramiquirogab333/parcial2-prog3.git grupo11-libreria-src
-cd grupo11-libreria-src
-```
-
-En actualizaciones posteriores:
-
-```bash
-cd /root/grupo11-libreria-src
-git pull
-```
-
-### 2. Red y volumen
-
-```bash
-docker network create grupo11-libreria-net 2>/dev/null || true
-docker volume create grupo11-libreria-pgdata
-```
-
-### 3. Variables de entorno y PostgreSQL (primera vez)
-
-El archivo de variables se crea en el servidor, fuera del repositorio. La
-contraseña se escribe una sola vez y no queda en el historial de comandos.
-
-**Usar solo letras y números** en la contraseña (sin `@`, `:`, `/`, `#` ni `%`),
-para que no haya que escaparla dentro de la URL.
-
-```bash
-read -rsp "Password de PostgreSQL: " DB_PASS; echo
-printf 'DATABASE_URL=postgresql+asyncpg://libreria:%s@grupo11-libreria-db:5432/libreria\nSQL_ECHO=false\n' "$DB_PASS" > /root/grupo11-libreria.env
-chmod 600 /root/grupo11-libreria.env
-
-docker run -d --name grupo11-libreria-db \
-  --network grupo11-libreria-net \
-  --restart unless-stopped \
-  -e POSTGRES_USER=libreria \
-  -e POSTGRES_PASSWORD="$DB_PASS" \
-  -e POSTGRES_DB=libreria \
-  -v grupo11-libreria-pgdata:/var/lib/postgresql/data \
-  postgres:16-alpine
-
-unset DB_PASS
-```
-
-### 4. Imagen de la aplicación
+Easypanel ejecuta el equivalente a:
 
 ```bash
 docker build -t grupo11-libreria-api:latest .
 ```
 
-### 5. Contenedor de la aplicación
+El `Dockerfile` parte de `python:3.12-alpine`, copia e instala `requirements.txt`
+antes del código, crea el usuario `appuser` (UID 10001) y deja el `HEALTHCHECK`
+sobre `http://127.0.0.1:8000/health/ready`.
+
+### Ejecución con `docker run` (caso D-05)
+
+La imagen no arranca sin `DATABASE_URL`:
+
+```bash
+docker run --rm --name libreria-api-sin-db easypanel/grupo_11/libreria-api:latest
+# exit=1: DATABASE_URL es obligatoria
+```
+
+La salida completa está en `evidence/D-05_sin_database_url.txt`.
+
+### Ejecución manual equivalente (validación local)
+
+El despliegue en línea se hace con Easypanel, pero la imagen también se validó
+localmente con el mismo comando que pide la consigna:
 
 ```bash
 docker run -d --name grupo11-libreria-api \
-  --network grupo11-libreria-net \
-  --restart unless-stopped \
   --env-file /root/grupo11-libreria.env \
   -p 8011:8000 \
   grupo11-libreria-api:latest
 ```
 
-Verificación:
+El archivo `grupo11-libreria.env` contiene `DATABASE_URL` y `SQL_ECHO`; vive
+fuera del repositorio y de la imagen. Su contenido no se incluye en este
+documento.
+
+### Datos iniciales
 
 ```bash
-docker ps --filter name=grupo11-libreria
-docker inspect --format '{{.State.Health.Status}}' grupo11-libreria-api
-docker logs grupo11-libreria-api
+docker exec <contenedor> python -m app.seed
 ```
 
-El contenedor queda `healthy` cuando `GET /health/ready` responde 200 (es decir,
-cuando PostgreSQL responde). Si la base todavía no estaba lista, el
-`--restart unless-stopped` vuelve a levantar la API.
+Es idempotente: si ya hay libros cargados, no duplica nada.
 
-### 6. Datos iniciales
+### Verificación
 
 ```bash
-docker exec grupo11-libreria-api python -m app.seed
-```
-
-El script es idempotente: si ya hay libros cargados, no duplica nada.
-
-### 7. Prueba desde el servidor y desde afuera
-
-```bash
-curl -i http://127.0.0.1:8011/health/ready
-curl -s http://127.0.0.1:8011/libros/
-```
-
-Desde otra máquina:
-
-```bash
-curl -i http://libros.francogagliardi.me:8011/health/ready
-curl -s http://libros.francogagliardi.me:8011/libros/
+curl -i https://libros.francogagliardi.me/health/ready
+curl -s https://libros.francogagliardi.me/libros/
+docker ps --filter name=grupo_11_libreria-api
+docker logs <contenedor>
 ```
 
 ## Cómo se actualiza la aplicación
 
-Los datos viven en el volumen `grupo11-libreria-pgdata`, no en el contenedor de
-la API. Por eso se puede eliminar y recrear el contenedor sin perder datos:
-
-```bash
-cd /root/grupo11-libreria-src
-git pull
-docker build -t grupo11-libreria-api:latest .
-docker rm -f grupo11-libreria-api
-docker run -d --name grupo11-libreria-api \
-  --network grupo11-libreria-net \
-  --restart unless-stopped \
-  --env-file /root/grupo11-libreria.env \
-  -p 8011:8000 \
-  grupo11-libreria-api:latest
-docker exec grupo11-libreria-api python -m app.seed   # opcional; no duplica
-```
-
-El arranque vuelve a ejecutar `SQLModel.metadata.create_all`: solo crea las
-tablas que faltan y no altera las existentes.
+1. Se hace `push` a la rama `main` del repositorio.
+2. En Easypanel, se entra al App service `libreria-api` y se elige
+   **Deploy** (o **Redeploy**). Easypanel reconstruye la imagen con el
+   `Dockerfile` y recrea el contenedor.
+3. Los datos **no se pierden**: viven en el servicio PostgreSQL, no en el
+   contenedor de la API.
+4. Si se agregaron datos iniciales nuevos, se puede volver a ejecutar
+   `docker exec <contenedor> python -m app.seed`; el script no duplica.
+5. El arranque vuelve a ejecutar `SQLModel.metadata.create_all`: solo crea las
+   tablas que faltan y no altera las existentes.
 
 ## Cambios al proyecto para que corra en el contenedor
 
 - `DATABASE_URL` es obligatoria: no hay valores por defecto en el código. Si
   falta, la aplicación no arranca (caso D-05).
-- La variable que activa el diagnóstico de consultas es `SQL_ECHO` (en
-  producción va en `false`).
+- La variable de diagnóstico es `SQL_ECHO` (en producción, `false`).
 - El `HEALTHCHECK` consulta `http://127.0.0.1:8000/health/ready` y no
   `localhost`, porque en Alpine `localhost` resuelve primero a IPv6 (`::1`) y
   uvicorn escucha en IPv4.
-- `GET /health/live` devuelve `{"estado":"vivo"}`, como en la tabla de endpoints
-  de la consigna.
+- `GET /health/live` devuelve `{"estado":"vivo"}`, como en la tabla de endpoints.
 - Los datos iniciales se cargan con `python -m app.seed` dentro del contenedor.
+- `GET /` no está definido y devuelve 404. La documentación interactiva está en
+  `/docs`; los endpoints de la consigna están bajo `/health`, `/editoriales`,
+  `/generos`, `/autores`, `/libros`, `/clientes` y `/ventas`.
 
-## Alternativa: PostgreSQL creado desde Easypanel
+## Nota sobre el criterio "Contenedor: la imagen"
 
-Si se prefiere crear el PostgreSQL como servicio del proyecto `grupo_11` en
-Easypanel, el contenedor de la API solo puede alcanzarlo si la red
-`easypanel-grupo_11` es `attachable` (`docker network inspect
-easypanel-grupo_11 --format '{{.Attachable}}'`) y se corre la API con
-`--network easypanel-grupo_11`. El host interno y las credenciales son los que
-muestra Easypanel. La opción documentada arriba (contenedor propio) no depende
-de la red de Easypanel y es la que se usa para la entrega.
+La imagen se construye con `python:3.12-alpine` y el `Dockerfile` del proyecto;
+la aplicación corre con el usuario sin privilegios `appuser` (UID 10001), sin
+secretos dentro de la imagen y con `HEALTHCHECK`. El servicio en línea es
+administrado por Easypanel (Docker Swarm), por lo que el contenedor de
+producción no se lanza con `docker run`; el comando `docker run` se usa en D-05
+para demostrar que la imagen no arranca sin `DATABASE_URL`. La evidencia de
+cada caso está en `evidence/`.
 
 ## Evidencia
 
-### Paso 1: caso D-03 desde afuera (PC)
-
-Con la API ya arriba, desde tu PC:
-
-```powershell
-'{"cliente_id":2,"renglones":[{"libro_id":1,"cantidad":2},{"libro_id":4,"cantidad":1}]}' | Set-Content -Encoding ascii venta.json
-curl.exe -i http://libros.francogagliardi.me:8011/health/ready
-curl.exe -s http://libros.francogagliardi.me:8011/libros/
-curl.exe -i -X POST http://libros.francogagliardi.me:8011/ventas/ -H "Content-Type: application/json" --data-binary "@venta.json"
-```
-
-Guardar la salida en `evidence/D-03_url_publica.txt`.
-
-### Paso 2: D-01, D-02, D-04, D-05, D-06, D-07 y C-07 en el VPS
-
-```bash
-cd /root/grupo11-libreria-src
-git pull
-bash scripts/capturar_evidencia.sh
-```
-
-El script genera:
-
-- `evidence/D-01_docker_images.txt`
-- `evidence/D-02_contenedor_healthy.txt`
-- `evidence/D-04_recreacion.txt`
-- `evidence/D-05_sin_database_url.txt`
-- `evidence/D-06_usuario.txt`
-- `evidence/D-07_comprobante.txt`
-- `evidence/C-07_consultas_vps.txt`
-
-### Tabla de evidencia
-
-| Caso | Archivo |
-| --- | --- |
-| C-07 | `evidence/C-07_consultas_vps.txt` |
-| D-01 | `evidence/D-01_docker_images.txt` |
-| D-02 | `evidence/D-02_contenedor_healthy.txt` |
-| D-03 | `evidence/D-03_url_publica.txt` |
-| D-04 | `evidence/D-04_recreacion.txt` |
-| D-05 | `evidence/D-05_sin_database_url.txt` |
-| D-06 | `evidence/D-06_usuario.txt` |
-| D-07 | `evidence/D-07_comprobante.txt` |
+| Caso | Archivo | Resultado |
+| --- | --- | --- |
+| C-07 | `evidence/C-07_consultas.txt` | 2 SELECT fijas para un libro con 1 autor, con 2 autores y para una venta con 2 renglones |
+| D-01 | `evidence/D-01_docker_images.txt` | `python:3.12-alpine` 74.8 MB; imagen del proyecto 209 MB |
+| D-02 | `evidence/D-02_contenedor_healthy.txt` | Contenedor `healthy` y arranque con las tablas creadas |
+| D-03 | `evidence/D-03_url_publica.txt` | `/health/ready` 200, `/libros/` 200 y `POST /ventas/` 201 |
+| D-04 | `evidence/D-04_recreacion.txt` | Se elimina la tarea y Swarm la recrea `healthy`; los datos siguen |
+| D-05 | `evidence/D-05_sin_database_url.txt` | Sin `DATABASE_URL` el contenedor termina con `exit=1` |
+| D-06 | `evidence/D-06_usuario.txt` | `uid=10001(appuser)`, no root |
+| D-07 | `evidence/D-07_comprobante.txt` | El comprobante aparece 0.5 s después de la respuesta 201 |

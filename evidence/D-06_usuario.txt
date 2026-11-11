@@ -1,0 +1,4 @@
+$ docker exec grupo_11_libreria-api.1.f7xxsmmljxbakapixffyq2lbn id
+uid=10001(appuser) gid=10001(appuser) groups=10001(appuser)
+
+# El proceso de la aplicación no corre como root.

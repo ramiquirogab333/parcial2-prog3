@@ -1,0 +1,17 @@
+$ docker ps --filter name=grupo_11_libreria-api
+CONTAINER ID   IMAGE                                    COMMAND                  CREATED          STATUS                   PORTS      NAMES
+16ce16f78f08   easypanel/grupo_11/libreria-api:latest   "uvicorn app.main:ap…"   19 minutes ago   Up 19 minutes (healthy)   8000/tcp   grupo_11_libreria-api.1.g6o8ejtlvj55a4rhwce0whwss
+
+$ docker logs grupo_11_libreria-api.1.g6o8ejtlvj55a4rhwce0whwss
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:app.main:Inicializando base de datos...
+INFO:app.main:Base de datos lista.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:43946 - "GET /health/ready HTTP/1.1" 200 OK
+INFO:     10.11.0.16:33618 - "GET /docs HTTP/1.1" 200 OK
+INFO:     10.11.0.16:39768 - "GET /health/live HTTP/1.1" 200 OK
+INFO:     10.11.0.16:39756 - "GET /libros/ HTTP/1.1" 200 OK
+
+# El contenedor arrancó healthy y el lifespan creó las tablas en PostgreSQL.

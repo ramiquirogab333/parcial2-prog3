@@ -1,0 +1,19 @@
+$ docker run --rm --name libreria-api-sin-db easypanel/grupo_11/libreria-api:latest
+Traceback (most recent call last):
+  File "/usr/local/bin/uvicorn", line 8, in <module>
+    sys.exit(main())
+  ...
+  File "/app/app/main.py", line 6, in <module>
+    from app.core.config import settings
+  File "/app/app/core/config.py", line 34, in <module>
+    settings = get_settings()
+  File "/app/app/core/config.py", line 31, in get_settings
+    return Settings()
+  ...
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Settings
+DATABASE_URL
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+exit=1
+
+# Sin DATABASE_URL la aplicación no arranca y el contenedor termina con error.
