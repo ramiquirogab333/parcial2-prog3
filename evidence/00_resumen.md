@@ -6,7 +6,7 @@ Despliegue público: **https://libros.francogagliardi.me**
 | --- | --- | --- |
 | C-07 | `C-07_consultas.txt` | 2 SELECT fijas para un libro con 1 autor, con 2 autores y para una venta con 2 renglones |
 | D-01 | `D-01_docker_images.txt` | `python:3.12-alpine` 74.8 MB; imagen del proyecto 209 MB |
-| D-02 | `D-02_contenedor_healthy.txt` | Contenedor `healthy` y arranque con las tablas creadas |
+| D-02 | `D-02_contenedor_healthy.txt` y `D-02_build_log.txt` | Build con Dockerfile, contenedor `healthy` y arranque con las tablas creadas |
 | D-03 | `D-03_url_publica.txt` | `/health/ready` 200, `/libros/` 200 y `POST /ventas/` 201 |
 | D-04 | `D-04_recreacion.txt` | Se elimina la tarea y Swarm la recrea `healthy`; los libros y la venta siguen |
 | D-05 | `D-05_sin_database_url.txt` | Sin `DATABASE_URL` el contenedor termina con `exit=1` |

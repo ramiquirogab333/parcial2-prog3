@@ -3,7 +3,8 @@
 ## Datos del despliegue
 
 - **URL pública:** <https://libros.francogagliardi.me>
-- **Fecha y hora:** 2026-11-11, 19:30 hs (UTC-3, aproximado)
+- **Fecha y hora:** 2026-11-11, 19:30 hs (UTC-3). Build iniciado a las
+  22:30:04 GMT y finalizado a las 22:30:56 GMT.
 - **Servidor:** `srv1920450` (Ubuntu 24.04, Docker 29.7.1), VPS compartido entre grupos
 - **Grupo:** 11
 - **Proyecto Easypanel:** `grupo_11`
@@ -152,7 +153,7 @@ cada caso está en `evidence/`.
 | --- | --- | --- |
 | C-07 | `evidence/C-07_consultas.txt` | 2 SELECT fijas para un libro con 1 autor, con 2 autores y para una venta con 2 renglones |
 | D-01 | `evidence/D-01_docker_images.txt` | `python:3.12-alpine` 74.8 MB; imagen del proyecto 209 MB |
-| D-02 | `evidence/D-02_contenedor_healthy.txt` | Contenedor `healthy` y arranque con las tablas creadas |
+| D-02 | `evidence/D-02_contenedor_healthy.txt` y `evidence/D-02_build_log.txt` | Build con Dockerfile, contenedor `healthy` y arranque con las tablas creadas |
 | D-03 | `evidence/D-03_url_publica.txt` | `/health/ready` 200, `/libros/` 200 y `POST /ventas/` 201 |
 | D-04 | `evidence/D-04_recreacion.txt` | Se elimina la tarea y Swarm la recrea `healthy`; los datos siguen |
 | D-05 | `evidence/D-05_sin_database_url.txt` | Sin `DATABASE_URL` el contenedor termina con `exit=1` |
