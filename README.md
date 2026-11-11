@@ -1,5 +1,7 @@
 # Librería de Barrio API
 
+**Grupo:** 11
+
 API asincrónica para el catálogo y las ventas de una librería de barrio.
 Parcial de Programación III (capítulos 1 a 4) con empaquetado en Docker y
 despliegue en un VPS.
