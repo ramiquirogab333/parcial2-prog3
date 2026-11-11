@@ -24,7 +24,7 @@ class Venta(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     # Asociación: la venta conoce al cliente, pero ninguno es parte del otro.
-    cliente_id: int = Field(foreign_key="clientes.id", index=True)
+    cliente_id: int = Field(foreign_key="cliente.id", index=True)
     # Fecha con zona horaria (TIMESTAMP WITH TIME ZONE).
     fecha: datetime = Field(
         default_factory=_ahora_utc,
@@ -56,7 +56,7 @@ class RenglonVenta(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     venta_id: int = Field(foreign_key="venta.id", index=True)
     # Asociación: el renglón nombra un libro que ya existe.
-    libro_id: int = Field(foreign_key="libros.id", index=True)
+    libro_id: int = Field(foreign_key="libro.id", index=True)
     cantidad: int = Field()
     # RN-06: copiado del libro al registrar la venta; no cambia después.
     precio_unitario: Decimal = Field(

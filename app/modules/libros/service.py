@@ -38,14 +38,16 @@ MENSAJE_404 = "No existe un libro con ese id"
 
 def _traducir_integrity_error(exc: IntegrityError) -> str:
     """Traduce un IntegrityError a un mensaje amigable sin exponer la base (RN-12)."""
-    err_text = str(exc).lower()
+    # Se analiza solo el mensaje de PostgreSQL (exc.orig): str(exc) incluye
+    # además el SQL del INSERT, que siempre nombra columnas como "isbn".
+    err_text = str(exc.orig).lower()
     if "isbn" in err_text:
         return "Ya existe un libro con ese ISBN"
-    if "editoriales" in err_text or "editorial_id" in err_text:
+    if "editorial_id" in err_text:
         return "La editorial especificada no existe"
-    if "generos" in err_text or "genero_id" in err_text:
+    if "genero_id" in err_text:
         return "El género especificado no existe"
-    if "autores" in err_text or "autor_id" in err_text:
+    if "autor_id" in err_text:
         return "Uno o más autores especificados no existen"
     if "check_libro_precio" in err_text:
         return "El precio debe ser mayor que cero"

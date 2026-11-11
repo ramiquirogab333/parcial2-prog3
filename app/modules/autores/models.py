@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class Autor(SQLModel, table=True):
-    __tablename__ = "autores"
+    __tablename__ = "autor"
 
     id: int | None = Field(default=None, primary_key=True)
     nombre: str = Field(max_length=80)

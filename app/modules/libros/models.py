@@ -29,8 +29,8 @@ class LibroAutor(SQLModel, table=True):
         ),
     )
 
-    libro_id: int = Field(foreign_key="libros.id", primary_key=True, index=True)
-    autor_id: int = Field(foreign_key="autores.id", primary_key=True, index=True)
+    libro_id: int = Field(foreign_key="libro.id", primary_key=True, index=True)
+    autor_id: int = Field(foreign_key="autor.id", primary_key=True, index=True)
     rol: str = Field(max_length=20)
     orden: int = Field()
 
@@ -41,7 +41,7 @@ class LibroAutor(SQLModel, table=True):
 class Libro(SQLModel, table=True):
     """Modelo de tabla de libros (catálogo central de la librería)."""
 
-    __tablename__ = "libros"
+    __tablename__ = "libro"
     __table_args__ = (
         CheckConstraint("precio > 0", name="check_libro_precio_positivo"),
         CheckConstraint("stock >= 0", name="check_libro_stock_no_negativo"),
@@ -58,10 +58,10 @@ class Libro(SQLModel, table=True):
     stock: int = Field(default=0)
 
     # Agregación: Libro incorpora una editorial que ya existe
-    editorial_id: int = Field(foreign_key="editoriales.id", index=True)
+    editorial_id: int = Field(foreign_key="editorial.id", index=True)
     # Agregación opcional: el género es optativo (nulo permitido)
     genero_id: int | None = Field(
-        default=None, foreign_key="generos.id", index=True, nullable=True
+        default=None, foreign_key="genero.id", index=True, nullable=True
     )
 
     # Navegación en los dos extremos

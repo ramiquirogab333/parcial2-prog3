@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class Cliente(SQLModel, table=True):
-    __tablename__ = "clientes"
+    __tablename__ = "cliente"
 
     id: int | None = Field(default=None, primary_key=True)
     nombre: str = Field(max_length=120)
@@ -25,11 +25,11 @@ class Cliente(SQLModel, table=True):
 
 
 class PerfilCliente(SQLModel, table=True):
-    __tablename__ = "perfiles_cliente"
+    __tablename__ = "perfil_cliente"
 
     id: int | None = Field(default=None, primary_key=True)
     # RN-09: UNIQUE en la FK => un cliente tiene como máximo un perfil.
-    cliente_id: int = Field(foreign_key="clientes.id", unique=True, index=True)
+    cliente_id: int = Field(foreign_key="cliente.id", unique=True, index=True)
     telefono: str | None = Field(default=None, max_length=30)
     direccion: str | None = Field(default=None, max_length=200)
 

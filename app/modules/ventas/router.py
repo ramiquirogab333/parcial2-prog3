@@ -14,7 +14,7 @@ router = APIRouter(tags=["Ventas"])
 
 R404 = {status.HTTP_404_NOT_FOUND: {"description": "No existe una venta con ese id"}}
 R404_CLIENTE = {status.HTTP_404_NOT_FOUND: {"description": "No existe un cliente con ese id"}}
-R409 = {status.HTTP_409_CONFLICT: {"description": "Cliente o libro inexistente"}}
+R409 = {status.HTTP_409_CONFLICT: {"description": "Cliente o libro inexistente, o stock insuficiente"}}
 
 
 @router.post(

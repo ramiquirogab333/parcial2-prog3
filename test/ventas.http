@@ -88,6 +88,23 @@ Content-Type: application/json
   ]
 }
 
+### Stock insuficiente ("Respiración artificial" tiene stock 5)
+### Esperado: 409 "Stock insuficiente para el libro 'Respiración artificial' (disponible: ...)"
+### y el stock del libro queda igual.
+POST {{base_url}}/ventas/
+Content-Type: application/json
+
+{
+  "cliente_id": 1,
+  "renglones": [
+    { "libro_id": 2, "cantidad": 999 }
+  ]
+}
+
+### Stock descontado
+### Esperado: 200; después de C-06, "Rayuela" pasa de stock 10 a 8.
+GET {{base_url}}/libros/1
+
 ### RN-05a. Venta sin renglones
 ### Esperado: 422 (validación del DTO, no se ejecuta el handler)
 POST {{base_url}}/ventas/

@@ -6,6 +6,7 @@ Reglas clave implementadas:
 - RN-06: el precio unitario se copia del libro leyéndolo de la base.
 - RN-07: el total lo calcula el servidor (suma de cantidad * precio unitario).
 - RN-08: no hay actualización de ventas.
+- Stock: cada venta descuenta del libro la cantidad vendida (409 si no alcanza).
 - RN-10: listados paginados con limit/offset.
 - RN-12: IntegrityError traducido a 409 sin filtrar texto interno de la base.
 - Ejercicio 5: lecturas sin N+1 (joinedload para cliente y libro,
@@ -44,11 +45,14 @@ CENTAVOS = Decimal("0.01")
 
 def _traducir_integrity_error(exc: IntegrityError) -> str:
     """Traduce un IntegrityError a un mensaje propio sin exponer la base (RN-12)."""
-    err_text = str(exc).lower()
-    if "clientes" in err_text or "cliente_id" in err_text:
+    # Solo el mensaje de PostgreSQL (exc.orig): str(exc) incluye el SQL del INSERT.
+    err_text = str(exc.orig).lower()
+    if "cliente_id" in err_text:
         return "El cliente especificado no existe"
-    if "libros" in err_text or "libro_id" in err_text:
+    if "libro_id" in err_text:
         return MENSAJE_LIBRO_INEXISTENTE
+    if "check_libro_stock" in err_text:
+        return "No hay stock suficiente para completar la venta"
     if "check_renglon_cantidad" in err_text:
         return "La cantidad de cada renglón debe ser mayor que cero"
     if "check_renglon_precio" in err_text:
@@ -113,27 +117,44 @@ async def obtener_venta(session: AsyncSession, venta_id: int) -> Venta:
 
 
 async def crear_venta(session: AsyncSession, data: VentaCreate) -> VentaReadDetail:
-    """Registra una venta con sus renglones (RN-04 a RN-07).
+    """Registra una venta con sus renglones (RN-04 a RN-07) y descuenta el stock.
 
-    - Los precios se leen de la base en UNA consulta y se copian a cada renglón (RN-06).
-    - Si algún libro no existe => 409 con mensaje propio.
+    - Los libros se leen en UNA consulta con SELECT ... FOR UPDATE: las filas
+      quedan bloqueadas hasta el commit, así dos ventas simultáneas no pueden
+      vender el mismo ejemplar (el CHECK stock >= 0 es la última barrera).
+    - El precio de cada libro se copia al renglón (RN-06).
+    - Libro inexistente o stock insuficiente => 409 con mensaje propio.
     - El cliente no se consulta antes: si no existe, la base rechaza la clave
       foránea y se responde 409 (RN-12).
     """
     libro_ids = [r.libro_id for r in data.renglones]
-    result = await session.exec(select(Libro.id, Libro.precio).where(Libro.id.in_(libro_ids)))
-    precios: dict[int, Decimal] = {libro_id: precio for libro_id, precio in result.all()}
+    result = await session.exec(
+        select(Libro).where(Libro.id.in_(libro_ids)).order_by(Libro.id).with_for_update()
+    )
+    libros: dict[int, Libro] = {libro.id: libro for libro in result.all()}  # type: ignore[misc]
 
-    if len(precios) != len(set(libro_ids)):
+    if len(libros) != len(set(libro_ids)):
+        await session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=MENSAJE_LIBRO_INEXISTENTE)
+
+    for renglon_data in data.renglones:
+        libro = libros[renglon_data.libro_id]
+        if libro.stock < renglon_data.cantidad:
+            # El mensaje se arma ANTES del rollback: el rollback vence los
+            # atributos cargados y leerlos después dispararía una carga implícita.
+            mensaje = f"Stock insuficiente para el libro '{libro.titulo}' (disponible: {libro.stock})"
+            await session.rollback()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=mensaje)
 
     venta = Venta(cliente_id=data.cliente_id)
     for renglon_data in data.renglones:
+        libro = libros[renglon_data.libro_id]
+        libro.stock -= renglon_data.cantidad
         venta.renglones.append(
             RenglonVenta(
                 libro_id=renglon_data.libro_id,
                 cantidad=renglon_data.cantidad,
-                precio_unitario=precios[renglon_data.libro_id],
+                precio_unitario=libro.precio,
             )
         )
     venta.total = calcular_total(venta.renglones)
