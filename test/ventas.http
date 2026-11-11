@@ -158,7 +158,7 @@ Content-Type: application/json
 ### --------------------------------------------------------------------------
 
 ### C-07. Detalle de una venta
-### Esperado: 200, con cliente y renglones. Con DB_ECHO=true se ve en consola una
+### Esperado: 200, con cliente y renglones. Con SQL_ECHO=true se ve en consola una
 ### cantidad fija de consultas, la misma con uno o con varios renglones.
 GET {{base_url}}/ventas/1
 

@@ -19,8 +19,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.config import settings
 
 engine: AsyncEngine = create_async_engine(
-    settings.database_url,
-    echo=settings.DB_ECHO,
+    settings.DATABASE_URL,
+    echo=settings.SQL_ECHO,
     pool_pre_ping=True,  # descarta conexiones muertas del pool
 )
 

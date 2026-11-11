@@ -1,0 +1,26 @@
+# Secretos y configuración local: nunca entran a la imagen.
+.env
+.env.*
+env.example
+
+# Entorno virtual y cachés de Python.
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Control de versiones y editores.
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Material de la cátedra, documentación y evidencias: la app no los usa.
+*.pdf
+consigna.txt
+README.md
+DEPLOY.md
+test/
+evidence/

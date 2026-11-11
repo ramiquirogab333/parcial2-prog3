@@ -1,7 +1,10 @@
 """Configuración de la aplicación.
 
-Los secretos (usuario, contraseña, host de la base) entran SOLO por variables
-de entorno o por un archivo `.env` local que nunca se sube al repositorio.
+La dirección de la base entra SOLO por la variable de entorno DATABASE_URL
+(o por un archivo `.env` local que nunca se sube al repositorio).
+
+No hay valores por defecto para la base: si DATABASE_URL falta, la aplicación
+no arranca (es el comportamiento que pide el caso D-05 de la consigna).
 """
 
 from functools import lru_cache
@@ -14,28 +17,13 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "Librería de Barrio API"
 
-    # Datos de conexión a PostgreSQL 16
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "libreria"
+    # Obligatoria. Formato:
+    # postgresql+asyncpg://usuario:clave@host:puerto/base
+    DATABASE_URL: str
 
-    # Si se define, tiene prioridad sobre los campos sueltos de arriba.
-    # Formato: postgresql+asyncpg://usuario:clave@host:puerto/base
-    DATABASE_URL: str | None = None
-
-    # Muestra el SQL generado por SQLAlchemy en consola (útil para revisar N+1).
-    DB_ECHO: bool = False
-
-    @property
-    def database_url(self) -> str:
-        if self.DATABASE_URL:
-            return self.DATABASE_URL
-        return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+    # Diagnóstico: muestra en consola el SQL que emite SQLAlchemy.
+    # En producción va en false para no escribir cada consulta en el registro.
+    SQL_ECHO: bool = False
 
 
 @lru_cache

@@ -1,0 +1,3 @@
+# El Dockerfile y los scripts se ejecutan en Linux: siempre con LF.
+Dockerfile text eol=lf
+*.sh text eol=lf

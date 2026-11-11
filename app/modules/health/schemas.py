@@ -4,7 +4,8 @@ from sqlmodel import SQLModel
 
 
 class LiveResponse(SQLModel):
-    status: Literal["ok"] = "ok"
+    # La tabla de endpoints de la consigna espera {"estado": "vivo"}.
+    estado: Literal["vivo"] = "vivo"
 
 
 class ReadyResponse(SQLModel):
