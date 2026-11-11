@@ -30,6 +30,13 @@ IMAGE="$(docker inspect "$APP" --format '{{.Config.Image}}')"
 echo "Contenedor: $APP"
 echo "Imagen: $IMAGE"
 
+# D-01 necesita la imagen base visible en docker images. BuildKit puede no
+# dejarla taggeada, así que se descarga si falta.
+if ! docker image inspect python:3.12-alpine >/dev/null 2>&1; then
+  echo "Descargando python:3.12-alpine para la evidencia D-01..."
+  docker pull python:3.12-alpine
+fi
+
 # D-01: imagen base y imagen del proyecto.
 {
   echo '$ docker images python:3.12-alpine'
@@ -99,6 +106,7 @@ fi
 } > "$OUT/D-04_recreacion.txt" 2>&1
 
 # D-05: sin DATABASE_URL el contenedor no queda sirviendo.
+docker rm -f libreria-api-sin-db >/dev/null 2>&1 || true
 {
   echo "\$ docker run --rm --name libreria-api-sin-db $IMAGE"
   docker run --rm --name libreria-api-sin-db "$IMAGE"
