@@ -1,6 +1,11 @@
 """Modelo de tabla del módulo editoriales."""
 
-from sqlmodel import Field, SQLModel
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.modules.libros.models import Libro
 
 
 class Editorial(SQLModel, table=True):
@@ -10,5 +15,6 @@ class Editorial(SQLModel, table=True):
     nombre: str = Field(unique=True, index=True, max_length=120)
     pais: str = Field(max_length=60)
 
-    # TODO(Turno 4 - Libros): agregar la relación con Libro (1 a x) y el
-    # endpoint GET /editoriales/{id}/libros. Lo implementa el turno de Libros.
+    # Relación 1 a x con Libro (agregación en Libro)
+    libros: list["Libro"] = Relationship(back_populates="editorial")
+

@@ -5,6 +5,7 @@ from app.core.database import get_session
 from app.modules.editoriales import service
 from app.modules.editoriales.models import Editorial
 from app.modules.editoriales.schemas import EditorialCreate, EditorialRead, EditorialUpdate
+from app.modules.libros.schemas import LibroReadList
 
 router = APIRouter(prefix="/editoriales", tags=["Editoriales"])
 
@@ -68,3 +69,20 @@ async def actualizar_editorial(
 ) -> EditorialRead:
     """Actualiza parcialmente una editorial: solo se aplican los campos enviados (exclude_unset)."""
     return await service.actualizar_editorial(session, editorial_id, data)
+
+
+@router.get(
+    "/{editorial_id}/libros",
+    response_model=list[LibroReadList],
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "No existe una editorial con ese id"},
+    },
+)
+async def listar_libros_editorial(
+    editorial_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> list[LibroReadList]:
+    """Lista los libros pertenecientes a una editorial (con precarga de editorial y género)."""
+    libros = await service.listar_libros_por_editorial(session, editorial_id)
+    return libros  # type: ignore[return-value]
+

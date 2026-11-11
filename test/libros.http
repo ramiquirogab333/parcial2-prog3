@@ -1,0 +1,266 @@
+### Casos de prueba del módulo libros y autorías (Turno 4)
+### Requisitos: la API corriendo en 127.0.0.1:8000 (uvicorn app.main:app)
+### Extensión sugerida: VS Code REST Client.
+
+@base_url = http://127.0.0.1:8000
+
+### --------------------------------------------------------------------------
+### Pre-requisitos: crear editorial, género y autores de prueba si no existen
+### --------------------------------------------------------------------------
+
+### Pre-1. Crear editorial para pruebas (201)
+POST {{base_url}}/editoriales/
+Content-Type: application/json
+
+{
+  "nombre": "Editorial Sudamericana",
+  "pais": "Argentina"
+}
+
+### Pre-2. Crear género para pruebas (201)
+POST {{base_url}}/generos/
+Content-Type: application/json
+
+{
+  "nombre": "Ficción"
+}
+
+### Pre-3. Crear primer autor para pruebas (201)
+POST {{base_url}}/autores/
+Content-Type: application/json
+
+{
+  "nombre": "Adolfo",
+  "apellido": "Bioy Casares",
+  "nacionalidad": "Argentina"
+}
+
+### Pre-4. Crear segundo autor para pruebas (201)
+POST {{base_url}}/autores/
+Content-Type: application/json
+
+{
+  "nombre": "Silvina",
+  "apellido": "Ocampo",
+  "nacionalidad": "Argentina"
+}
+
+### --------------------------------------------------------------------------
+### Altas de Libros (Ejercicio 4 / POST /libros/)
+### --------------------------------------------------------------------------
+
+### 1. Alta válida de un libro con relaciones (201, Ejercicio 4)
+### Viajan editorial_id, genero_id y lista de autores con rol y orden.
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0006-6",
+  "titulo": "Los que aman, odian",
+  "precio": "21000.00",
+  "stock": 4,
+  "editorial_id": 1,
+  "genero_id": 1,
+  "autores": [
+    { "autor_id": 1, "rol": "coautor", "orden": 1 },
+    { "autor_id": 2, "rol": "coautor", "orden": 2 }
+  ]
+}
+
+### 2. Alta de libro con género opcional nulo (201, agregación opcional)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0007-3",
+  "titulo": "Ficciones",
+  "precio": "28500.50",
+  "stock": 10,
+  "editorial_id": 1,
+  "autores": [
+    { "autor_id": 1, "rol": "autor", "orden": 1 }
+  ]
+}
+
+### 3. Caso C-02: ISBN repetido (409 con mensaje propio, RN-01)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0006-6",
+  "titulo": "Duplicado de ISBN",
+  "precio": "15000.00",
+  "stock": 1,
+  "editorial_id": 1
+}
+
+### 4. Caso C-04: Editorial inexistente (409 con mensaje propio, Ejercicio 4)
+### Ningún if consulta antes; la base rechaza la clave foránea y se responde 409.
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0008-0",
+  "titulo": "Libro Fantasma",
+  "precio": "10000.00",
+  "stock": 5,
+  "editorial_id": 99999,
+  "autores": []
+}
+
+### 5. Caso C-04: Autor inexistente (409 con mensaje propio, Ejercicio 4)
+### La base rechaza la clave foránea del autor en libro_autor y se responde 409.
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0009-7",
+  "titulo": "Libro Autor Fantasma",
+  "precio": "12000.00",
+  "stock": 2,
+  "editorial_id": 1,
+  "autores": [
+    { "autor_id": 99999, "rol": "autor", "orden": 1 }
+  ]
+}
+
+### 6. Validación de DTO: Precio menor o igual a cero (422, RN-03)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0010-3",
+  "titulo": "Libro Gratis Inválido",
+  "precio": "0.00",
+  "stock": 5,
+  "editorial_id": 1
+}
+
+### 7. Validación de DTO: Stock negativo (422, RN-03)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0011-0",
+  "titulo": "Libro Deuda Inválido",
+  "precio": "15000.00",
+  "stock": -1,
+  "editorial_id": 1
+}
+
+### 8. Validación de DTO: Rol de autor no válido (422)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0012-7",
+  "titulo": "Libro Rol Inválido",
+  "precio": "15000.00",
+  "stock": 2,
+  "editorial_id": 1,
+  "autores": [
+    { "autor_id": 1, "rol": "editor_fantasma", "orden": 1 }
+  ]
+}
+
+### 9. Validación de DTO: Orden de autor menor a 1 (422)
+POST {{base_url}}/libros/
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0013-4",
+  "titulo": "Libro Orden Inválido",
+  "precio": "15000.00",
+  "stock": 2,
+  "editorial_id": 1,
+  "autores": [
+    { "autor_id": 1, "rol": "autor", "orden": 0 }
+  ]
+}
+
+### --------------------------------------------------------------------------
+### Lecturas y Listados (Ejercicio 5 / RN-10 / RN-11)
+### --------------------------------------------------------------------------
+
+### 10. Listar libros con paginación por defecto (200, RN-10)
+GET {{base_url}}/libros/
+
+### 11. Listar libros con limit y offset personalizados (200, RN-10)
+GET {{base_url}}/libros/?limit=5&offset=0
+
+### 12. Paginación inválida: limit = 0 (422, RN-10)
+GET {{base_url}}/libros/?limit=0
+
+### 13. Paginación inválida: limit = 101 fuera de rango (422, RN-10)
+GET {{base_url}}/libros/?limit=101
+
+### 14. Búsqueda por parte del título insensible a mayúsculas (200, RN-11)
+GET {{base_url}}/libros/?titulo=aman
+
+### 15. Filtrado por género (200)
+GET {{base_url}}/libros/?genero_id=1
+
+### 16. Caso C-08: Inyección SQL en búsqueda por título (200 con lista vacía, RN-11)
+### La consulta usa parámetro ligado, por lo que busca literalmente el texto.
+GET {{base_url}}/libros/?titulo=%27%20OR%20%271%27=%271
+
+### 17. Detalle de libro por ID (200, Ejercicio 5 sin N+1 / C-07)
+### Carga anticipada de editorial (joinedload), género (joinedload) y autores (selectinload).
+GET {{base_url}}/libros/1
+
+### 18. Detalle de libro inexistente (404)
+GET {{base_url}}/libros/99999
+
+### 19. Caso C-01: Parámetro de ruta no entero (422 sin ejecutar el handler)
+GET {{base_url}}/libros/abc
+
+### --------------------------------------------------------------------------
+### Modificación Parcial (PATCH /libros/{id})
+### --------------------------------------------------------------------------
+
+### 20. Actualización parcial exitosa (200, exclude_unset)
+PATCH {{base_url}}/libros/1
+Content-Type: application/json
+
+{
+  "precio": "22500.00",
+  "stock": 8
+}
+
+### 21. Actualización con ISBN repetido (409 con mensaje propio)
+PATCH {{base_url}}/libros/2
+Content-Type: application/json
+
+{
+  "isbn": "978-950-00-0006-6"
+}
+
+### 22. Actualización de libro inexistente (404)
+PATCH {{base_url}}/libros/99999
+Content-Type: application/json
+
+{
+  "titulo": "Inexistente"
+}
+
+### --------------------------------------------------------------------------
+### Navegación y Lecturas de Relaciones Inversas
+### --------------------------------------------------------------------------
+
+### 23. Libros de una editorial (200, GET /editoriales/{id}/libros)
+GET {{base_url}}/editoriales/1/libros
+
+### 24. Libros de una editorial inexistente (404)
+GET {{base_url}}/editoriales/99999/libros
+
+### 25. Libros de un género (200, GET /generos/{id}/libros)
+GET {{base_url}}/generos/1/libros
+
+### 26. Libros de un género inexistente (404)
+GET {{base_url}}/generos/99999/libros
+
+### 27. Libros de un autor con rol y orden (200, GET /autores/{id}/libros)
+GET {{base_url}}/autores/1/libros
+
+### 28. Libros de un autor inexistente (404)
+GET {{base_url}}/autores/99999/libros

@@ -4,6 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.database import get_session
 from app.modules.autores import service
 from app.modules.autores.schemas import AutorCreate, AutorRead, AutorUpdate
+from app.modules.libros.schemas import LibroEnAutorRead
 
 router = APIRouter(prefix="/autores", tags=["Autores"])
 
@@ -52,3 +53,16 @@ async def actualizar_autor(
 ) -> AutorRead:
     """Actualiza parcialmente un autor: solo se aplican los campos enviados."""
     return await service.actualizar_autor(session, autor_id, data)
+
+
+@router.get(
+    "/{autor_id}/libros",
+    response_model=list[LibroEnAutorRead],
+    responses={status.HTTP_404_NOT_FOUND: {"description": "No existe un autor con ese id"}},
+)
+async def listar_libros_autor(
+    autor_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> list[LibroEnAutorRead]:
+    """Lista los libros asociados a un autor con rol y orden."""
+    return await service.listar_libros_por_autor(session, autor_id)

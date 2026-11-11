@@ -1,6 +1,11 @@
 """Modelo de tabla del módulo autores."""
 
-from sqlmodel import Field, SQLModel
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.modules.libros.models import LibroAutor
 
 
 class Autor(SQLModel, table=True):
@@ -11,5 +16,6 @@ class Autor(SQLModel, table=True):
     apellido: str = Field(max_length=80)
     nacionalidad: str | None = Field(default=None, max_length=60)
 
-    # TODO(Turno 4 - Libros): la relación N:M con Libro se modela con la clase
-    # intermedia LibroAutor (rol, orden). Lo implementa el turno de Libros.
+    # Relación muchos a muchos con Libro vía tabla intermedia con datos (LibroAutor)
+    autorias: list["LibroAutor"] = Relationship(back_populates="autor")
+

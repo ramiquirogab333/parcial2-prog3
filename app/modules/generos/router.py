@@ -4,6 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.database import get_session
 from app.modules.generos import service
 from app.modules.generos.schemas import GeneroCreate, GeneroRead
+from app.modules.libros.schemas import LibroReadList
 
 router = APIRouter(prefix="/generos", tags=["Generos"])
 
@@ -33,3 +34,19 @@ async def listar_generos(
 ) -> list[GeneroRead]:
     """Lista todos los géneros."""
     return await service.listar_generos(session)
+
+
+@router.get(
+    "/{genero_id}/libros",
+    response_model=list[LibroReadList],
+    responses={
+        status.HTTP_404_NOT_FOUND: {"description": "No existe un género con ese id"},
+    },
+)
+async def listar_libros_genero(
+    genero_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> list[LibroReadList]:
+    """Lista los libros asociados a un género (con precarga de editorial y género)."""
+    libros = await service.listar_libros_por_genero(session, genero_id)
+    return libros  # type: ignore[return-value]

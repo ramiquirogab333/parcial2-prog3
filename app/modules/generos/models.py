@@ -1,6 +1,11 @@
 """Modelo de tabla del módulo generos."""
 
-from sqlmodel import Field, SQLModel
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from app.modules.libros.models import Libro
 
 
 class Genero(SQLModel, table=True):
@@ -9,5 +14,6 @@ class Genero(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     nombre: str = Field(unique=True, index=True, max_length=80)
 
-    # TODO(Turno 4 - Libros): agregar la relación N:M con Libro (tabla intermedia)
-    # y el endpoint GET /generos/{id}/libros. Lo implementa el turno de Libros.
+    # Relación 1 a x con Libro (agregación opcional en Libro)
+    libros: list["Libro"] = Relationship(back_populates="genero")
+

@@ -10,11 +10,13 @@ import logging
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.modules.editoriales.models import Editorial
 from app.modules.editoriales.schemas import EditorialCreate, EditorialUpdate
+from app.modules.libros.models import Libro
 
 logger = logging.getLogger(__name__)
 
@@ -65,3 +67,21 @@ async def actualizar_editorial(
         logger.info("Conflicto al actualizar editorial: %s", exc.__class__.__name__)
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=MENSAJE_409) from exc
     return editorial
+
+
+async def listar_libros_por_editorial(
+    session: AsyncSession, editorial_id: int
+) -> list[Libro]:
+    """Lista todos los libros publicados por una editorial con precarga de editorial y género."""
+    await obtener_editorial(session, editorial_id)  # 404 si la editorial no existe
+    stmt = (
+        select(Libro)
+        .where(Libro.editorial_id == editorial_id)
+        .options(
+            joinedload(Libro.editorial),
+            joinedload(Libro.genero),
+        )
+        .order_by(Libro.id)
+    )
+    result = await session.exec(stmt)
+    return list(result.unique().all())
