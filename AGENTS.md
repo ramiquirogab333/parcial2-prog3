@@ -1,3 +1,6 @@
+> **TP GLOBAL:** el trabajo de integración se hace en `parcial1-prog3`.
+> Ver `GLOBAL-CHANGE.md` y `GLOBAL-AGENTS.md` en ese repo. Este archivo describe solo el backend.
+
 # AGENTS.md - Directrices para Agentes de IA (OpenSpec / SDD)
 
 ## 1. Rol y Contexto del Proyecto
